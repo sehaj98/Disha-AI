@@ -37,10 +37,9 @@ def home():
 def chat(request: ChatRequest):
     try:
         response = client.models.generate_content(
-            model="gemini-2.5-flash",
-            contents=request.message,
-        )
-
+    model="gemini-2.5-flash-lite",
+    contents=request.message,
+)
         return {
             "response": response.text
         }
