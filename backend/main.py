@@ -1,3 +1,4 @@
+from graph import graph
 from fastapi import FastAPI
 from pydantic import BaseModel
 from dotenv import load_dotenv
@@ -35,17 +36,19 @@ def home():
 
 @app.post("/chat")
 def chat(request: ChatRequest):
-    try:
-        response = client.models.generate_content(
-    model="gemini-2.5-flash-lite",
-    contents=request.message,
-)
-        return {
-            "response": response.text
-        }
 
-    except Exception as e:
-        print("Gemini Error:", e)
-        return {
-            "error": str(e)
-        }
+    state = {
+        "messages": [request.message],
+        "status": "",
+        "student_class": "",
+        "country": "",
+        "interests": [],
+        "stream": "",
+        "response": ""
+    }
+
+    result = graph.invoke(state)
+
+    return {
+        "response": result["response"]
+    }
