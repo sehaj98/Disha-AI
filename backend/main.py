@@ -1,5 +1,6 @@
 from graph import graph
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
 from google import genai
@@ -22,6 +23,18 @@ app = FastAPI(
     title="Disha AI",
     description="Student Growth & Guidance Agent",
     version="1.0"
+)
+
+# Allow the Vite dev server (and any local frontend) to call this API
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Request model
