@@ -1,30 +1,19 @@
 from state import DishaState
+from services.ai_service import generate_response
+
 
 def stream_node(state: DishaState):
 
-    interests = " ".join(state.get("interests", [])).lower()
+    prompt = (
+        f"Student details -> Class: {state.get('student_class') or 'unknown'}, "
+        f"Country: {state.get('country') or 'unknown'}, "
+        f"Interests: {', '.join(state.get('interests', [])) or 'not specified'}.\n"
+        f'Their message: "{state["messages"][-1]}"\n\n'
+        "Recommend a suitable academic stream (Science, Commerce, or Arts, "
+        "with a specific specialization if relevant) and 2-3 realistic career "
+        "paths it opens up. Be specific to their interests, not a generic list."
+    )
 
-    if "coding" in interests or "computer" in interests:
-        state["response"] = (
-            "You may enjoy the Science stream with Computer Science. "
-            "It can lead to careers in Software Engineering, AI, Data Science, and Cybersecurity."
-        )
-
-    elif "biology" in interests:
-        state["response"] = (
-            "You may enjoy the Science stream with Biology. "
-            "It can lead to careers in Medicine, Pharmacy, Biotechnology, and Research."
-        )
-
-    elif "business" in interests:
-        state["response"] = (
-            "You may enjoy the Commerce stream. "
-            "It can lead to careers in CA, Finance, Banking, and Business Management."
-        )
-
-    else:
-        state["response"] = (
-            "Based on your interests, explore different streams before making a final decision."
-        )
+    state["response"] = generate_response(prompt)
 
     return state
