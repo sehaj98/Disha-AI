@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
+import { API_URL } from '../api'
+import { useAuth } from '../context/AuthContext'
 
 const STARTERS = [
   "I'm in class 11 in India and I love coding",
@@ -17,6 +17,7 @@ const INITIAL_MESSAGES = [
 ]
 
 function ChatWidget() {
+  const { token } = useAuth()
   const [messages, setMessages] = useState(INITIAL_MESSAGES)
   const [input, setInput] = useState('')
   const [status, setStatus] = useState('idle') // idle | sending | error
@@ -37,7 +38,10 @@ function ChatWidget() {
     try {
       const res = await fetch(`${API_URL}/chat`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({ message: trimmed }),
       })
 
