@@ -19,4 +19,9 @@ class Student(Base):
     # Used by the weekly promotion job: if today has passed the next
     # academic-year boundary since this date, current_class gets bumped by 1.
     last_promoted_date = Column(Date, default=date.today)
+
+    # Used by the email scheduler: null means "never emailed yet".
+    last_emailed_at = Column(Date, nullable=True)
+
     created_at = Column(Date, default=date.today)
+    

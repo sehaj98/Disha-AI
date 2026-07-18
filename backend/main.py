@@ -1,3 +1,5 @@
+from datetime import date, datetime
+
 from graph import graph
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -5,12 +7,16 @@ from pydantic import BaseModel
 from dotenv import load_dotenv
 from google import genai
 from sqlalchemy.orm import Session
+from apscheduler.schedulers.background import BackgroundScheduler
 import os
 
 import models
 import schemas
 from database import engine, get_db
 from auth import hash_password, verify_password, create_access_token, get_current_student
+from services.updates_service import get_updates_for_student
+from services.email_service import send_update_email
+from scheduler import send_due_updates
 
 # Load .env file
 load_dotenv()
@@ -45,6 +51,14 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Background scheduler: checks once a day which students are due for an
+# email (see scheduler.py / EMAIL_INTERVAL_DAYS in .env). next_run_time
+# makes it also run once immediately on startup so you can see it work
+# without waiting a full day during development.
+scheduler = BackgroundScheduler()
+scheduler.add_job(send_due_updates, "interval", hours=24, next_run_time=datetime.now())
+scheduler.start()
 
 # Request model
 class ChatRequest(BaseModel):
@@ -93,6 +107,32 @@ def me(current_student: models.Student = Depends(get_current_student)):
     return current_student
 
 
+@app.get("/updates")
+def updates(current_student: models.Student = Depends(get_current_student)):
+    """Logged-in students get a live, class-aware digest without asking
+    a question first."""
+    digest = get_updates_for_student(current_student)
+    return {"digest": digest}
+
+
+@app.post("/updates/send-now")
+def send_now(
+    current_student: models.Student = Depends(get_current_student),
+    db: Session = Depends(get_db),
+):
+    """Manual trigger for testing: emails the logged-in student their
+    digest immediately, bypassing the schedule's due-date check."""
+    digest = get_updates_for_student(current_student)
+    sent = send_update_email(current_student.email, current_student.name, digest)
+
+    if sent:
+        current_student.last_emailed_at = date.today()
+        db.add(current_student)
+        db.commit()
+
+    return {"sent": sent}
+
+
 @app.post("/chat")
 def chat(request: ChatRequest):
 
@@ -111,3 +151,4 @@ def chat(request: ChatRequest):
     return {
         "response": result["response"]
     }
+    

@@ -13,6 +13,9 @@ function Nav() {
 
         {student ? (
           <div className="nav__user">
+            <Link className="nav__link" to="/dashboard">
+              Dashboard
+            </Link>
             <span className="nav__user-name">Hi, {student.name?.split(' ')[0] || 'there'}</span>
             <button className="nav__cta" onClick={logout} type="button">
               Log out

@@ -50,7 +50,7 @@ function Signup() {
         current_class: form.current_class ? Number(form.current_class) : null,
         interests,
       })
-      navigate('/')
+      navigate('/dashboard')
     } catch (err) {
       setError(err.message)
     } finally {
