@@ -1,81 +1,47 @@
-import { useCallback, useEffect, useState } from 'react'
-import { Navigate } from 'react-router-dom'
-import { API_URL } from '../api'
-import { useAuth } from '../context/AuthContext'
-import ChatWidget from '../components/ChatWidget'
+import { Routes, Route } from 'react-router-dom'
+import Nav from './components/Nav'
+import Hero from './components/Hero'
+import HowItWorks from './components/HowItWorks'
+import PathMotif from './components/PathMotif'
+import ChatWidget from './components/ChatWidget'
+import Footer from './components/Footer'
+import Login from './pages/Login'
+import Signup from './pages/Signup'
+import Dashboard from './pages/Dashboard'
+import './App.css'
 
-function Dashboard() {
-  const { token, student, loading: authLoading } = useAuth()
-  const [digest, setDigest] = useState('')
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
+const WAYPOINTS = [
+  { label: 'start', x: 210, y: 145 },
+  { label: 'read', x: 610, y: 195 },
+  { label: 'path', x: 990, y: 330 },
+]
 
-  const fetchUpdates = useCallback(async () => {
-    setLoading(true)
-    setError('')
-    try {
-      const res = await fetch(`${API_URL}/updates`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      if (!res.ok) throw new Error('Could not load your updates right now.')
-      const data = await res.json()
-      setDigest(data.digest)
-    } catch (err) {
-      setError(err.message)
-    } finally {
-      setLoading(false)
-    }
-  }, [token])
-
-  useEffect(() => {
-    if (token) fetchUpdates()
-  }, [token, fetchUpdates])
-
-  // Not logged in and we're done checking -> bounce to login.
-  if (!authLoading && !token) {
-    return <Navigate to="/login" replace />
-  }
-
+function Home() {
   return (
     <>
-      <section className="dashboard">
-        <div className="dashboard__intro">
-          <p className="eyebrow dashboard__eyebrow">Your direction, updated</p>
-          <h1 className="dashboard__title">
-            {student ? `Here's what's new for you, ${student.name?.split(' ')[0] || ''}` : 'Your updates'}
-          </h1>
-          <p className="dashboard__sub">
-            {student?.current_class
-              ? `Based on class ${student.current_class}${student.interests?.length ? ` and your interest in ${student.interests.join(', ')}` : ''}.`
-              : 'Complete your profile for more specific updates.'}
-          </p>
-        </div>
-
-        <div className="dashboard__card">
-          {loading && <p className="dashboard__loading">Looking up what's new for you…</p>}
-
-          {!loading && error && (
-            <p className="dashboard__error">{error}</p>
-          )}
-
-          {!loading && !error && (
-            <p className="dashboard__digest">{digest}</p>
-          )}
-
-          <button
-            className="dashboard__refresh"
-            type="button"
-            onClick={fetchUpdates}
-            disabled={loading}
-          >
-            {loading ? 'Refreshing…' : 'Refresh my updates'}
-          </button>
-        </div>
-      </section>
-
+      <div className="journey">
+        <PathMotif waypoints={WAYPOINTS} />
+        <Hero />
+        <HowItWorks />
+      </div>
       <ChatWidget />
     </>
   )
 }
 
-export default Dashboard
+function App() {
+  return (
+    <>
+      <Nav />
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+      </Routes>
+      <Footer />
+    </>
+  )
+}
+
+export default App
